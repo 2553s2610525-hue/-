@@ -22,7 +22,11 @@ if 'expenses' not in st.session_state:
 if 'budget' not in st.session_state:
     st.session_state.budget = 500000 
 
-# --- 3. 소비 요약 계산 및 AI 잔소리 ---
+# --- 3. 현재 활성화된 메뉴 상태 관리 ---
+if 'current_menu' not in st.session_state:
+    st.session_state.current_menu = "🏠 메인 홈 / 소비 요약"
+
+# --- 4. 소비 요약 계산 및 AI 잔소리 ---
 total_spent = st.session_state.expenses["금액"].sum()
 remaining = st.session_state.budget - total_spent
 ratio = total_spent / st.session_state.budget
@@ -32,35 +36,50 @@ def get_nagging_message(ratio):
     elif ratio < 0.9: return "⚠️ 슬슬 시동 걸리죠? 지금 긁으려는 그 카드 당장 내려놓으세요."
     else: return "🚨 파산 직전! 통장이 아니라 텅장입니다. 당장 숨만 쉬고 사세요!!"
 
-# --- 4. 메뉴 선택 기능 (사이드바) ---
-st.sidebar.title("📌 메뉴 내비게이션")
-menu = st.sidebar.radio(
-    "이동할 기능을 선택하세요:",
-    ["🏠 메인 홈 / 소비 요약", "📊 소비분석", "📝 소비기록", "🤖 AI 잔소리", "🌱 절약활동"]
-)
 
-# --- 5. 안전하게 다른 팀원 코드를 불러오는 함수 ---
+# --- 5. 안전하게 다른 팀원 코드를 불러오는 헬퍼 함수 ---
 def run_team_page(file_name, page_title):
     file_path = f"pages/{file_name}"
+    
+    # 홈으로 돌아가는 버튼 상단 배정
+    if st.button("⬅️ 메인 홈으로 돌아가기"):
+        st.session_state.current_menu = "🏠 메인 홈 / 소비 요약"
+        st.rerun()
+    st.write("---")
+
     if os.path.exists(file_path):
         try:
-            # 팀원 파일의 코드를 동적으로 안전하게 실행
             spec = importlib.util.spec_from_file_location("mod", file_path)
             mod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(mod)
         except Exception as e:
-            # 팀원 코드 내부에서 에러가 나면 메인을 죽이지 않고 에러 메시지만 표시
-            st.error(f"🚨 {page_title} 페이지 코드 내부에 오류가 있습니다!")
+            st.error(f"🚨 {page_title} 페이지 코드 내부에 에러가 있습니다!")
             st.exception(e)
     else:
         st.warning(f"⚠️ `pages/{file_name}` 파일이 아직 깃허브에 없습니다. 팀원이 업로드하면 활성화됩니다!")
 
-# --- 6. 메뉴별 화면 조건문 처리 ---
-if menu == "🏠 메인 홈 / 소비 요약":
+
+# --- 6. 사이드바 내비게이션 (메인과 연동) ---
+st.sidebar.title("📌 메뉴 내비게이션")
+selected_sidebar = st.sidebar.radio(
+    "메뉴 선택:",
+    ["🏠 메인 홈 / 소비 요약", "📊 소비분석", "📝 소비기록", "🤖 AI 잔소리", "🌱 절약활동"],
+    index=["🏠 메인 홈 / 소비 요약", "📊 소비분석", "📝 소비기록", "🤖 AI 잔소리", "🌱 절약활동"].index(st.session_state.current_menu)
+)
+if selected_sidebar != st.session_state.current_menu:
+    st.session_state.current_menu = selected_sidebar
+    st.rerun()
+
+
+# --- 7. 화면 조건문 처리 ---
+
+# [화면 1] 메인 대시보드 홈 (버튼 형식 포함)
+if st.session_state.current_menu == "🏠 메인 홈 / 소비 요약":
     st.title("💸 AI 잔소리 가계부")
     st.markdown("### 이번 달 소비 현황 요약")
     st.write("---")
 
+    # 상단 요약 카드
     col1, col2, col3 = st.columns(3)
     col1.metric("총 지출액", f"{total_spent:,} 원")
     col2.metric("설정 예산", f"{st.session_state.budget:,} 원")
@@ -76,18 +95,56 @@ if menu == "🏠 메인 홈 / 소비 요약":
     elif ratio >= 0.5: st.warning(nagging_msg)
     else: st.success(nagging_msg)
 
-elif menu == "📊 소비분석":
+    st.write("---")
+
+    # 🎛️ 원하셨던 [메인 화면 버튼 형식 메뉴] 복구!
+    st.subheader("🛠️ 다른 기능으로 이동")
+    st.write("원하는 기능 버튼을 클릭하면 해당 페이지 화면으로 즉시 전환됩니다.")
+
+    menu_col1, menu_col2 = st.columns(2)
+
+    with menu_col1:
+        st.info("📊 소비 패턴을 분석하고 싶나요?")
+        if st.button("📊 소비분석 페이지로 이동", use_container_width=True):
+            st.session_state.current_menu = "📊 소비분석"
+            st.rerun()
+
+        st.write("") 
+        
+        st.info("🔥 건별 잔소리 폭격을 맞고 싶나요?")
+        if st.button("🤖 AI 잔소리 페이지로 이동", use_container_width=True):
+            st.session_state.current_menu = "🤖 AI 잔소리"
+            st.rerun()
+
+    with menu_col2:
+        st.info("📝 새로운 소비를 기록하고 싶나요?")
+        if st.button("📝 소비기록 페이지로 이동", use_container_width=True):
+            st.session_state.current_menu = "📝 소비기록"
+            st.rerun()
+
+        st.write("") 
+
+        st.info("🌱 절약 활동 미션을 확인해볼까요?")
+        if st.button("🌱 절약활동 페이지로 이동", use_container_width=True):
+            st.session_state.current_menu = "🌱 절약활동"
+            st.rerun()
+
+# [화면 2] 소비분석 페이지 전환
+elif st.session_state.current_menu == "📊 소비분석":
     st.title("📊 소비분석")
     run_team_page("송유림.py", "소비분석")
 
-elif menu == "📝 소비기록":
+# [화면 3] 소비기록 페이지 전환
+elif st.session_state.current_menu == "📝 소비기록":
     st.title("📝 소비기록")
     run_team_page("안시윤.py", "소비기록")
 
-elif menu == "🤖 AI 잔소리":
+# [화면 4] AI 잔소리 페이지 전환
+elif st.session_state.current_menu == "🤖 AI 잔소리":
     st.title("🤖 AI 잔소리")
     run_team_page("김유민.py", "AI 잔소리")
 
-elif menu == "🌱 절약활동":
+# [화면 5] 절약활동 페이지 전환
+elif st.session_state.current_menu == "🌱 절약활동":
     st.title("🌱 절약활동")
     run_team_page("정선아.py", "절약활동")
