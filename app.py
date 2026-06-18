@@ -1,73 +1,101 @@
 import streamlit as st
-from google import genai
-from google.genai import types
-from google.genai.errors import APIError
+import pandas as pd
+import random
 
-# 1. 웹페이지 설정
-st.set_page_config(page_title="연애코치 밍글", page_icon="💖", layout="centered")
-st.title("💖 연애코치 밍글의 비밀 상담소")
-st.caption("연애 고민, 썸, 이별... 말 못 할 고민을 솔직하게 털어놓으세요.")
+# --- 1. 페이지 초기 설정 ---
+st.set_page_config(
+    page_title="AI 잔소리 가계부 - 홈",
+    page_icon="💸",
+    layout="centered"
+)
 
-# 2. Streamlit Secrets에서 API 키 안전하게 불러오기
-try:
-    api_key = st.secrets["GEMINI_API_KEY"]
-    client = genai.Client(api_key=api_key)
-except KeyError:
-    st.error("🚨 Streamlit Secrets에 'GEMINI_API_KEY'가 설정되지 않았습니다. 배포 설정을 확인해주세요.")
-    st.stop()
+# --- 2. 임시 데이터 (대시보드 출력용) ---
+if 'expenses' not in st.session_state:
+    st.session_state.expenses = pd.DataFrame([
+        {"날짜": "2026-06-01", "내역": "스타벅스", "금액": 6000},
+        {"날짜": "2026-06-05", "내역": "택시비", "금액": 15000},
+        {"날짜": "2026-06-12", "내역": "치킨 배달", "금액": 28000},
+    ])
 
-# 3. 세션 상태(Session State)로 채팅 기록 및 대화 객체 유지
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+if 'budget' not in st.session_state:
+    st.session_state.budget = 500000  # 이번 달 예산 한도
 
-if "chat_session" not in st.session_state:
-    # 챗봇의 페르소나 설정 (이 부분을 바꾸면 다른 주제의 챗봇이 됩니다)
-    system_instruction = (
-        "당신은 공감 능력이 뛰어나고 위트 있는 전문 연애 상담사 '밍글'입니다. "
-        "사용자의 연애 고민(썸, 이별, 짝사랑 등)을 듣고, 친구처럼 친근하면서도 "
-        "때로는 객관적이고 뼈 때리는 조언을 해주세요. 답변은 너무 길지 않게 다정한 말투로 작성해주세요."
-    )
+
+# --- 3. 소비 요약 계산 및 AI 잔소리 ---
+total_spent = st.session_state.expenses["금액"].sum()
+remaining = st.session_state.budget - total_spent
+ratio = total_spent / st.session_state.budget
+
+def get_nagging_message(ratio):
+    if ratio < 0.5:
+        return "🙄 통장이 아직 숨은 쉬네요. 언제 지를지 내가 지켜보고 있습니다."
+    elif ratio < 0.9:
+        return "⚠️ 슬슬 시동 걸리죠? 지금 긁으려는 그 카드 당장 내려놓으세요."
+    else:
+        return "🚨 파산 직전! 통장이 아니라 텅장입니다. 당장 숨만 쉬고 사세요!!"
+
+
+# --- 4. 메인 화면 UI 구현 ---
+st.title("💸 AI 잔소리 가계부")
+st.markdown("### 이번 달 소비 현황 요약")
+st.write("---")
+
+# 대시보드 상단 카드 지표
+col1, col2, col3 = st.columns(3)
+col1.metric("총 지출액", f"{total_spent:,} 원")
+col2.metric("설정 예산", f"{st.session_state.budget:,} 원")
+col3.metric("남은 금액", f"{remaining:,} 원", delta=f"-{total_spent:,}원")
+
+# 소비 진행 바
+st.progress(min(1.0, float(ratio)))
+st.caption(f"현재 예산 대비 **{ratio*100:.1f}%** 사용 중입니다.")
+
+st.write("---")
+
+# 🔥 핵심 기능: AI 잔소리 한마디 제공
+st.subheader("🤖 AI 가디언의 잔소리 한마디")
+nagging_msg = get_nagging_message(ratio)
+
+if ratio >= 0.9:
+    st.error(nagging_msg)
+elif ratio >= 0.5:
+    st.warning(nagging_msg)
+else:
+    st.success(nagging_msg)
+
+st.write("---")
+
+
+# --- 5. 🔀 다른 기능 페이지로 이동하는 메뉴 (바로가기 버튼) ---
+st.subheader("🛠️ 다른 기능으로 이동하기")
+st.write("팀원들이 개발한 다른 기능 페이지로 이동하려면 아래 메뉴를 클릭하세요.")
+
+# Grid 레이아웃으로 2x2 버튼 배치
+menu_col1, menu_col2 = st.columns(2)
+
+with menu_col1:
+    st.info("📝 소비 내역을 추가하고 싶나요?")
+    st.page_link("pages/page1.py", label="소비 기록 페이지로 이동", icon="➕")
+
+    st.write("") # 간격 조절용
     
-    # gemini-2.5-flash-lite 모델과 system_instruction을 결합하여 채팅 세션 시작
-    st.session_state.chat_session = client.chats.create(
-        model="gemini-2.5-flash-lite",
-        config=types.GenerateContentConfig(
-            system_instruction=system_instruction,
-            temperature=0.7,
-        )
-    )
+    st.info("🔥 건별 잔소리 폭격을 맞고 싶나요?")
+    st.page_link("pages/page3.py", label="실시간 잔소리 페이지로 이동", icon="💥")
 
-# 4. 기존 대화 기록 화면에 출력
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+with menu_col2:
+    st.info("📊 소비 패턴을 분석하고 싶나요?")
+    st.page_link("pages/page2.py", label="지출 통계 분석 페이지로 이동", icon="📈")
 
-# 5. 사용자 입력 처리
-if user_input := st.chat_input("오늘 어떤 고민이 있으신가요?"):
-    # 사용자 메시지 화면에 표시 및 저장
-    with st.chat_message("user"):
-        st.markdown(user_input)
-    st.session_state.messages.append({"role": "user", "content": user_input})
+    st.write("") # 간격 조절용
 
-    # 챗봇 답변 생성 및 오류 처리
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        message_placeholder.markdown("Thinking... 💬")
-        
-        try:
-            # API 호출
-            response = st.session_state.chat_session.send_message(user_input)
-            bot_reply = response.text
-            
-            # 답변 화면 출력 및 저장
-            message_placeholder.markdown(bot_reply)
-            st.session_state.messages.append({"role": "assistant", "content": bot_reply})
-            
-        except APIError as e:
-            # 구글 API 관련 에러 처리
-            message_placeholder.markdown("⚠️ 구글 API 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
-            st.sidebar.error(f"API Error: {e}")
-        except Exception as e:
-            # 기타 예외 처리
-            message_placeholder.markdown("⚠️ 죄송합니다. 메시지를 처리하는 중에 문제가 발생했습니다.")
-            st.sidebar.error(f"Unknown Error: {e}")
+    st.info("⚙️ 기본 예산 설정을 바꾸고 싶나요?")
+    st.page_link("pages/page4.py", label="환경 설정 페이지로 이동", icon="⚙️")
+
+
+# --- 6. 사이드바에도 이동 메뉴 노출 (선택 사항) ---
+st.sidebar.title("📌 빠른 이동 메뉴")
+st.sidebar.page_link("app.py", label="🏠 홈 / 소비 요약", use_container_width=True)
+st.sidebar.page_link("pages/page1.py", label="📝 소비 기록하기", use_container_width=True)
+st.sidebar.page_link("pages/page2.py", label="📊 통계 분석보기", use_container_width=True)
+st.sidebar.page_link("pages/page3.py", label="🔥 잔소리 폭격방", use_container_width=True)
+st.sidebar.page_link("pages/page4.py", label="⚙️ 시스템 설정", use_container_width=True)
