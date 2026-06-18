@@ -1,3 +1,4 @@
+st.page_link("pages/송유림.py", label="🙋‍♀️ 송유림: 소비분석 페이지")
 import streamlit as st
 import pandas as pd
 
