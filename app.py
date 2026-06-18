@@ -66,36 +66,36 @@ else:
 st.write("---")
 
 
-# --- 5. 🔀 다른 기능 페이지로 이동하는 메뉴 (안전한 버튼 방식) ---
-st.subheader("🛠️ 다른 기능으로 이동하기")
-st.write("팀원들이 개발한 기능 페이지로 이동하는 메뉴입니다. (연동 대기 중)")
+# --- 5. 🔀 팀원 이름 파일로 이동하는 메뉴 ---
+st.subheader("🛠️ 팀원별 기능 페이지로 이동")
+st.write("담당 팀원의 이름을 클릭하면 해당 페이지로 즉시 이동합니다.")
 
 # Grid 레이아웃으로 2x2 버튼 배치
 menu_col1, menu_col2 = st.columns(2)
 
 with menu_col1:
-    st.info("📝 소비 내역을 추가하고 싶나요?")
-    if st.button("📝 소비 기록 페이지로 이동", use_container_width=True):
-        st.toast("팀원 1의 페이지 파일('pages/page1.py')이 추가되면 연결됩니다!", icon="ℹ️")
+    st.info("📊 소비 패턴을 분석하고 싶나요?")
+    st.page_link("pages/송유림.py", label="🙋‍♀️ 송유림: 소비분석 페이지", icon="📈")
 
     st.write("") # 간격 조절용
     
     st.info("🔥 건별 잔소리 폭격을 맞고 싶나요?")
-    if st.button("💥 실시간 잔소리 페이지로 이동", use_container_width=True):
-        st.toast("팀원 3의 페이지 파일('pages/page3.py')이 추가되면 연결됩니다!", icon="ℹ️")
+    st.page_link("pages/김유민.py", label="🙋‍♀️ 김유민: AI 잔소리 페이지", icon="🤖")
 
 with menu_col2:
-    st.info("📊 소비 패턴을 분석하고 싶나요?")
-    if st.button("📈 지출 통계 분석 페이지로 이동", use_container_width=True):
-        st.toast("팀원 2의 페이지 파일('pages/page2.py')이 추가되면 연결됩니다!", icon="ℹ️")
+    st.info("📝 새로운 소비를 기록하고 싶나요?")
+    st.page_link("pages/안시윤.py", label="🙋‍♂️ 안시윤: 소비기록 페이지", icon="📝")
 
     st.write("") # 간격 조절용
 
-    st.info("⚙️ 기본 예산 설정을 바꾸고 싶나요?")
-    if st.button("⚙️ 환경 설정 페이지로 이동", use_container_width=True):
-        st.toast("팀원 4의 페이지 파일('pages/page4.py')이 추가되면 연결됩니다!", icon="ℹ️")
+    st.info("🌱 절약 활동 미션을 확인해볼까요?")
+    st.page_link("pages/정선아.py", label="🙋‍♀️ 정선아: 절약활동 페이지", icon="🌱")
 
 
-# --- 6. 사이드바 안내 ---
-st.sidebar.title("📌 안내")
-st.sidebar.info("현재 페이지는 메인 대시보드(홈)입니다. 다른 팀원들이 파일(pages/...)을 업로드하면 링크가 활성화됩니다.")
+# --- 6. 사이드바 메뉴도 팀원 이름으로 동기화 ---
+st.sidebar.title("📌 빠른 이동 메뉴")
+st.sidebar.page_link("app.py", label="🏠 홈 (소비 요약)", use_container_width=True)
+st.sidebar.page_link("pages/안시윤.py", label="📝 안시윤: 소비기록", use_container_width=True)
+st.sidebar.page_link("pages/송유림.py", label="📊 송유림: 소비분석", use_container_width=True)
+st.sidebar.page_link("pages/김유민.py", label="🤖 김유민: AI 잔소리", use_container_width=True)
+st.sidebar.page_link("pages/정선아.py", label="🌱 정선아: 절약활동", use_container_width=True)
