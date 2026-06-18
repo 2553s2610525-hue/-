@@ -66,36 +66,36 @@ else:
 st.write("---")
 
 
-# --- 5. 🔀 팀원 이름 메뉴 (파일 없어도 에러 안 나는 안전 버튼 방식) ---
-st.subheader("🛠️ 팀원별 기능 페이지로 이동")
-st.write("담당 팀원의 이름을 클릭하면 해당 페이지로 이동합니다. (팀원 파일 업로드 대기 중)")
+# --- 5. 🔀 진짜 작동하는 기능별 이동 메뉴 (st.page_link 사용) ---
+st.subheader("🛠️ 다른 기능으로 이동")
+st.write("원하는 기능을 클릭하면 해당 페이지로 즉시 이동합니다.")
 
 # Grid 레이아웃으로 2x2 버튼 배치
 menu_col1, menu_col2 = st.columns(2)
 
 with menu_col1:
     st.info("📊 소비 패턴을 분석하고 싶나요?")
-    if st.button("🙋‍♀️ 송유림: 소비분석 페이지", use_container_width=True):
-        st.toast("송유림 님의 파일('pages/송유림.py')이 GitHub에 추가되면 연결됩니다!", icon="ℹ️")
+    st.page_link("pages/송유림.py", label="📊 소비분석 페이지로 이동", icon="📈", use_container_width=True)
 
     st.write("") # 간격 조절용
     
     st.info("🔥 건별 잔소리 폭격을 맞고 싶나요?")
-    if st.button("🙋‍♀️ 김유민: AI 잔소리 페이지", use_container_width=True):
-        st.toast("김유민 님의 파일('pages/김유민.py')이 GitHub에 추가되면 연결됩니다!", icon="ℹ️")
+    st.page_link("pages/김유민.py", label="🤖 AI 잔소리 페이지로 이동", icon="💬", use_container_width=True)
 
 with menu_col2:
     st.info("📝 새로운 소비를 기록하고 싶나요?")
-    if st.button("🙋‍♂️ 안시윤: 소비기록 페이지", use_container_width=True):
-        st.toast("안시윤 님의 파일('pages/안시윤.py')이 GitHub에 추가되면 연결됩니다!", icon="ℹ️")
+    st.page_link("pages/안시윤.py", label="📝 소비기록 페이지로 이동", icon="✏️", use_container_width=True)
 
     st.write("") # 간격 조절용
 
     st.info("🌱 절약 활동 미션을 확인해볼까요?")
-    if st.button("🙋‍♀️ 정선아: 절약활동 페이지", use_container_width=True):
-        st.toast("정선아 님의 파일('pages/정선아.py')이 GitHub에 추가되면 연결됩니다!", icon="ℹ️")
+    st.page_link("pages/정선아.py", label="🌱 절약활동 페이지로 이동", icon="🌱", use_container_width=True)
 
 
-# --- 6. 사이드바 안내 ---
-st.sidebar.title("📌 대시보드 안내")
-st.sidebar.info("현재 페이지는 메인 홈 화면입니다. 팀원들이 각자 코드를 'pages/' 폴더에 업로드하면 실시간 내비게이션 링크로 전환해 드릴게요!")
+# --- 6. 사이드바 내비게이션 동기화 ---
+st.sidebar.title("📌 빠른 이동 메뉴")
+st.sidebar.page_link("app.py", label="🏠 홈 (소비 요약)", use_container_width=True)
+st.sidebar.page_link("pages/안시윤.py", label="📝 소비기록", use_container_width=True)
+st.sidebar.page_link("pages/송유림.py", label="📊 소비분석", use_container_width=True)
+st.sidebar.page_link("pages/김유민.py", label="🤖 AI 잔소리", use_container_width=True)
+st.sidebar.page_link("pages/정선아.py", label="🌱 절약활동", use_container_width=True)
